@@ -26,7 +26,11 @@
     showMessage('');
 
     const result = signUpMode
-      ? await client.auth.signUp({ email, password })
+      ? await client.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: 'https://isaiihardjoprajitno.github.io/flex/' }
+      })
       : await client.auth.signInWithPassword({ email, password });
 
     if (result.error) {
