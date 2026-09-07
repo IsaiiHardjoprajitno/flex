@@ -42,6 +42,23 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+  <div id="authGate" class="auth-gate" hidden>
+    <div class="auth-card">
+      <div class="brand-icon auth-icon">&#9889;</div>
+      <p class="auth-eyebrow">FieldOps Pro</p>
+      <h1>Sign in to Field Operations</h1>
+      <p class="auth-copy">Use your authorized account to access staff, attendance, team, and performance records.</p>
+      <form id="authForm">
+        <label class="form-label" for="authEmail">Work email</label>
+        <input class="form-control" id="authEmail" type="email" autocomplete="email" required>
+        <label class="form-label" for="authPassword">Password</label>
+        <input class="form-control" id="authPassword" type="password" autocomplete="current-password" required>
+        <button class="btn btn-primary auth-submit" type="submit"><span id="authSubmitText">Sign In</span></button>
+        <button class="auth-switch" id="authModeButton" type="button">Need an account? Create one</button>
+        <p class="auth-message" id="authMessage" role="alert"></p>
+      </form>
+    </div>
+  </div>
   <div class="app-container">
     
     <!-- SIDEBAR NAVIGATION -->
@@ -135,6 +152,7 @@
             <option value="Lead">Field Team Lead</option>
           </select>
         </div>
+        <button type="button" class="btn btn-secondary btn-sm auth-signout" id="authSignOut">Sign out</button>
       </div>
     </aside>
 
@@ -738,6 +756,14 @@
   <div id="toastContainer" class="toast-container"></div>
 
   <!-- JAVASCRIPT BUNDLE -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.supabaseConfig = {
+      url: 'https://ttupizustmbuukbtkbxj.supabase.co',
+      anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR0dXBpenVzdG1idXVrYnRrYnhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg3ODAxNDAsImV4cCI6MjEwNDM1NjE0MH0.ArGKvvXd4zN__9LW2ORty9r6QNa4k1gNI-wfBUJcr1Q'
+    };
+  </script>
+  <script src="js/auth.js"></script>
   <script src="js/db.js"></script>
   <script src="js/modules/teamLogger.js"></script>
   <script src="js/modules/attendance.js"></script>
