@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FieldOps | Staff, Team & Performance Tracking System</title>
+  <meta name="description" content="Operational field tracking system for mapping staff to daily teams, attendance, installations, and troubleshoot cases with analytics and payroll rollups.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Site Favicon (Clean SVG Vector) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232563EB'/%3E%3Cpath d='M18 4L7 17h8l-2 11 11-13h-8l2-11z' fill='%23FFFFFF'/%3E%3C/svg%3E">
+
+  <!-- Custom Domain Canonical & SEO Meta -->
+  <link rel="canonical" href="https://fieldops.app/">
+  <meta name="theme-color" content="#2563EB">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="FieldOps">
+  <meta property="og:title" content="FieldOps | Staff, Team & Performance Tracking System">
+  <meta property="og:description" content="Operational field tracking system for mapping staff to daily teams, attendance, installations, and troubleshoot cases.">
+  <meta property="og:url" content="https://fieldops.app/">
+  <meta property="og:image" content="https://fieldops.app/icon.svg">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="FieldOps | Staff, Team & Performance Tracking System">
+  <meta name="twitter:description" content="Operational field tracking system for mapping staff to daily teams, attendance, installations, and troubleshoot cases.">
+  <meta name="twitter:image" content="https://fieldops.app/icon.svg">
+  
+  <!-- Chart.js for analytics visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Application Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="sidebar">
+      <div class="brand-header">
+        <div class="brand-icon">
+          <svg style="width:22px; height:22px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <div class="brand-title">
+          <h2>FieldOps Pro</h2>
+          <p>Ops & Performance</p>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <div class="nav-section-title">Core Operations</div>
+        
+        <a class="nav-item active" data-tab="dashboard" id="nav-dashboard">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+          </svg>
+          <span>Dashboard</span>
+        </a>
+
+        <a class="nav-item" data-tab="team-entry" id="nav-team-entry">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          <span>Daily Team Log</span>
+          <span class="nav-badge">3-5 Crew</span>
+        </a>
+
+        <a class="nav-item" data-tab="attendance" id="nav-attendance">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          <span>Attendance Matrix</span>
+        </a>
+
+        <a class="nav-item" data-tab="analytics" id="nav-analytics">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+          </svg>
+          <span>Analytics & Rollups</span>
+        </a>
+
+        <div class="nav-section-title admin-only">Management & Setup</div>
+
+        <a class="nav-item admin-only" data-tab="staff" id="nav-staff">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <span>Staff Directory</span>
+        </a>
+
+        <a class="nav-item admin-only" data-tab="export" id="nav-export">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span>Reports & Export</span>
+        </a>
+
+        <div class="nav-section-title">Compliance & Legal</div>
+
+        <a class="nav-item" href="terms.html">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span>Terms & Conditions</span>
+        </a>
+
+        <a class="nav-item" href="privacy.html">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          <span>Privacy Policy</span>
+        </a>
+      </nav>
+
+      <!-- Role Switcher in Sidebar -->
+      <div class="sidebar-footer">
+        <div class="role-switcher-card">
+          <div class="role-label">
+            <span>Active Role</span>
+            <span class="badge badge-primary" style="font-size:0.65rem;">RBAC</span>
+          </div>
+          <select id="appRoleSelect" class="role-select">
+            <option value="Admin">Manager (Admin)</option>
+            <option value="Lead">Field Team Lead</option>
+          </select>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN WRAPPER -->
+    <div class="main-wrapper">
+      
+      <!-- TOP HEADER -->
+      <header class="top-header">
+        <div class="header-title-group">
+          <h1>Field Operations & Work Order Tracking</h1>
+          <p>Assign 3 to 5 technician crews, log fiber installations & troubleshoot tickets, and calculate daily attendance rollups.</p>
+        </div>
+
+        <div class="header-actions">
+          <div class="date-selector-box">
+            <svg style="width:16px; height:16px; color:var(--primary-light);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <input type="date" id="globalDateInput">
+          </div>
+
+          <button class="btn btn-primary" onclick="window.app.switchTab('team-entry')">
+            <svg style="width:16px; height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            <span>Log Daily Team</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- PAGE CONTENT VIEWPORTS -->
+      <main class="page-container">
+
+        <!-- 1. DASHBOARD VIEW -->
+        <section id="view-dashboard" class="page-view active">
+          <!-- KPI Cards Grid -->
+          <div class="kpi-grid">
+            <div class="kpi-card" style="--card-accent: #2563EB;">
+              <div class="kpi-header">
+                <span class="kpi-title">Today's Installations</span>
+                <div class="kpi-icon">
+                  <svg style="width:18px; height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div class="kpi-value" id="dashKpiInstalls">0</div>
+              <div class="kpi-footer">
+                <span class="kpi-trend-up">↑ On Target</span> • Residential & Commercial
+              </div>
+            </div>
+
+            <div class="kpi-card" style="--card-accent: #F59E0B;">
+              <div class="kpi-header">
+                <span class="kpi-title">Troubleshoots Resolved</span>
+                <div class="kpi-icon" style="background:rgba(245, 158, 11, 0.12); color:#F59E0B;">
+                  <svg style="width:18px; height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div class="kpi-value" id="dashKpiTroubles">0</div>
+              <div class="kpi-footer">
+                <span>Signal & ONT Fixes</span>
+              </div>
+            </div>
+
+            <div class="kpi-card" style="--card-accent: #06B6D4;">
+              <div class="kpi-header">
+                <span class="kpi-title">Active Field Crews</span>
+                <div class="kpi-icon" style="background:rgba(6, 182, 212, 0.12); color:#06B6D4;">
+                  <svg style="width:18px; height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div class="kpi-value" id="dashKpiTeams">0</div>
+              <div class="kpi-footer">
+                <span>3-5 members assigned per team</span>
+              </div>
+            </div>
+
+            <div class="kpi-card" style="--card-accent: #10B981;">
+              <div class="kpi-header">
+                <span class="kpi-title">Attendance Rate</span>
+                <div class="kpi-icon" style="background:rgba(16, 185, 129, 0.12); color:#10B981;">
+                  <svg style="width:18px; height:18px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                </div>
+              </div>
+              <div class="kpi-value" id="dashKpiAttendance">100%</div>
+              <div class="kpi-footer">
+                <span class="kpi-trend-up">Full shift coverage</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Crews & Quick Overview -->
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">
+                  <svg style="width:20px; height:20px; color:var(--primary-light);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                  Today's Dispatched Crews & Output
+                </h3>
+                <p class="panel-subtitle">Current teams configured with 3-5 technicians and live work logs</p>
+              </div>
+              <button class="btn btn-secondary btn-sm" onclick="window.app.switchTab('team-entry')">
+                Manage Teams
+              </button>
+            </div>
+            <div id="dashTodayCrewsContainer">
+              <!-- Rendered via App.js -->
+            </div>
+          </div>
+
+          <!-- Recent Activity Feed -->
+          <div class="panel">
+            <div class="panel-header">
+              <h3 class="panel-title">Recent Operational Log Submissions</h3>
+            </div>
+            <div id="dashRecentActivityContainer">
+              <!-- Rendered via App.js -->
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. DAILY TEAM & PERFORMANCE LOG ENTRY -->
+        <section id="view-team-entry" class="page-view">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">
+                  <svg style="width:20px; height:20px; color:var(--primary-light);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                  Daily Team Assignment & Performance Form
+                </h3>
+                <p class="panel-subtitle">Select team lead, tag 3 to 5 crew technicians, and log daily installations & troubleshoots</p>
+              </div>
+            </div>
+
+            <form id="teamLogForm">
+              <div class="form-grid">
+                
+                <!-- Section 1: Team Details -->
+                <div class="form-group">
+                  <label class="form-label">Team Name / Number <span class="req">*</span></label>
+                  <input type="text" id="teamNameInput" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Date <span class="req">*</span></label>
+                  <input type="date" id="logDate" class="form-control" required>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Team Lead <span class="req">*</span></label>
+                  <select id="teamLeadSelect" class="form-select" required>
+                    <!-- Populated dynamically -->
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Vehicle / Sector Zone</label>
+                  <input type="text" id="vehicleZoneInput" class="form-control">
+                </div>
+
+                <!-- Section 2: Staff Selection (Strict 3 to 5 constraint) -->
+                <div class="form-group full-width">
+                  <div class="staff-selector-box">
+                    <div class="staff-counter-bar">
+                      <div>
+                        <strong>Select 3 to 5 Crew Members Present Today <span class="req">*</span></strong>
+                        <div style="font-size:0.75rem; color:var(--text-muted);">Tagged technicians are automatically marked 'Present' on daily attendance.</div>
+                      </div>
+                      <span id="memberCountBadge" class="counter-badge invalid">0 / 3-5 Members Selected</span>
+                    </div>
+                    <div id="staffChipsContainer" class="staff-chips-grid">
+                      <!-- Populated dynamically -->
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Section 3: Performance Log - Installations -->
+                <div class="form-group" style="background:rgba(37, 99, 235, 0.05); padding:1rem; border-radius:var(--radius-md); border:1px solid rgba(37, 99, 235, 0.2);">
+                  <label class="form-label">
+                    <strong style="color:var(--primary-light);">Installations Completed (Qty)</strong>
+                    <span class="hint">Units finished</span>
+                  </label>
+                  <input type="number" id="installsQtyInput" class="form-control" min="0" value="0">
+                  <div style="margin-top:0.6rem;">
+                    <label class="form-label" style="font-size:0.75rem;">Installation Type</label>
+                    <select id="installTypeInput" class="form-select" style="font-size:0.8rem;">
+                      <option value="Residential Fiber Drop">Residential Fiber Drop</option>
+                      <option value="Commercial Gigabit Fiber">Commercial Gigabit Fiber</option>
+                      <option value="Mesh Wi-Fi & Upgrade">Mesh Wi-Fi & Upgrade</option>
+                      <option value="Underground Conduit Pull">Underground Conduit Pull</option>
+                    </select>
+                  </div>
+                  <div style="margin-top:0.6rem;">
+                    <label class="form-label" style="font-size:0.75rem;">Installation Notes / Batch</label>
+                    <input type="text" id="installNotesInput" class="form-control" style="font-size:0.8rem;">
+                  </div>
+                </div>
+
+                <!-- Section 4: Performance Log - Troubleshoot Cases -->
+                <div class="form-group" style="background:rgba(245, 158, 11, 0.05); padding:1rem; border-radius:var(--radius-md); border:1px solid rgba(245, 158, 11, 0.2);">
+                  <label class="form-label">
+                    <strong style="color:var(--accent-amber);">Troubleshoot Cases Resolved (Qty)</strong>
+                    <span class="hint">Tickets closed</span>
+                  </label>
+                  <input type="number" id="troublesQtyInput" class="form-control" min="0" value="0">
+                  <div style="margin-top:0.6rem;">
+                    <label class="form-label" style="font-size:0.75rem;">Primary Issue Category</label>
+                    <select id="troubleCategoryInput" class="form-select" style="font-size:0.8rem;">
+                      <option value="Optical Signal Degradation">Optical Signal Degradation</option>
+                      <option value="Modem / ONT Configuration">Modem / ONT Configuration</option>
+                      <option value="Damaged Drop Cable / Splicing">Damaged Drop Cable / Splicing</option>
+                      <option value="Hardware Replacement (Router/ONT)">Hardware Replacement (Router/ONT)</option>
+                      <option value="Customer Premise Wiring">Customer Premise Wiring</option>
+                    </select>
+                  </div>
+                  <div style="margin-top:0.6rem;">
+                    <label class="form-label" style="font-size:0.75rem;">Troubleshoot Notes / Root Cause</label>
+                    <input type="text" id="troubleNotesInput" class="form-control" style="font-size:0.8rem;">
+                  </div>
+                </div>
+
+                <div class="form-group full-width">
+                  <label class="form-label">General Team Notes</label>
+                  <textarea id="teamNotesInput" class="form-control"></textarea>
+                </div>
+
+              </div>
+
+              <div style="display:flex; justify-content:flex-end; gap:0.75rem; margin-top:1.5rem;">
+                <button type="button" id="btnResetForm" class="btn btn-secondary">Reset Form</button>
+                <button type="submit" class="btn btn-primary">
+                  <svg style="width:16px; height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span id="formSubmitBtnText">Save Daily Log & Crew</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Dispatched Teams Table for selected date -->
+          <div class="panel">
+            <div class="panel-header">
+              <h3 class="panel-title">Configured Daily Teams</h3>
+            </div>
+            <div id="todayTeamsListContainer">
+              <!-- Populated via teamLogger.js -->
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. ATTENDANCE MATRIX -->
+        <section id="view-attendance" class="page-view">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">
+                  <svg style="width:20px; height:20px; color:var(--primary-light);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  Technician Attendance Matrix
+                </h3>
+                <p class="panel-subtitle">Monthly attendance heat grid. Automatically syncs as team leads check in their crews.</p>
+              </div>
+
+              <!-- Month controls & bulk mark -->
+              <div style="display:flex; align-items:center; gap:0.75rem;">
+                <div style="display:flex; align-items:center; gap:0.35rem; background:var(--bg-surface-elevated); padding:0.25rem 0.5rem; border-radius:var(--radius-md); border:1px solid var(--border-subtle);">
+                  <button id="btnPrevMonth" class="btn btn-icon btn-sm" title="Previous Month">‹</button>
+                  <strong id="attendanceMonthTitle" style="padding:0 0.5rem; font-size:0.85rem;">Month Year</strong>
+                  <button id="btnNextMonth" class="btn btn-icon btn-sm" title="Next Month">›</button>
+                </div>
+
+                <button id="btnMarkAllPresent" class="btn btn-emerald btn-sm">
+                  <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span>Mark All Active Present</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Attendance Stats summary -->
+            <div id="attendanceStatsContainer"></div>
+
+            <!-- Filters -->
+            <div style="display:flex; gap:1rem; margin-bottom:1.25rem; flex-wrap:wrap;">
+              <div style="flex:1; min-width:200px;">
+                <input type="text" id="attendanceSearchInput" class="form-control">
+              </div>
+              <div style="width:180px;">
+                <select id="attendanceRoleFilter" class="form-select">
+                  <option value="All">All Roles</option>
+                  <option value="Lead">Team Leads Only</option>
+                  <option value="Technician">Technicians Only</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Matrix Grid Container -->
+            <div id="attendanceMatrixContainer">
+              <!-- Populated via attendance.js -->
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. ANALYTICS & ROLLUPS -->
+        <section id="view-analytics" class="page-view">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">
+                  <svg style="width:20px; height:20px; color:var(--primary-light);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+                  </svg>
+                  Operational Analytics & Rollup Reports
+                </h3>
+                <p class="panel-subtitle">Aggregated daily, weekly, and monthly metrics across teams and individual technician contributions</p>
+              </div>
+
+              <!-- Analytics Filters -->
+              <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+                <select id="analyticsTimeframe" class="form-select" style="width:150px;">
+                  <option value="7d">Last 7 Days</option>
+                  <option value="30d">Last 30 Days</option>
+                  <option value="today">Today Only</option>
+                  <option value="all">All-Time Rollup</option>
+                </select>
+                <select id="analyticsTeamFilter" class="form-select" style="width:180px;">
+                  <option value="All">All Teams</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Metric Summary Chips -->
+            <div class="kpi-grid" style="margin-bottom:1.5rem;">
+              <div class="kpi-card" style="padding:1rem;">
+                <div class="kpi-title">Period Installations</div>
+                <div class="kpi-value" id="analyticsKpiInstalls" style="color:var(--primary-light);">0</div>
+              </div>
+              <div class="kpi-card" style="padding:1rem;">
+                <div class="kpi-title">Period Troubleshoots</div>
+                <div class="kpi-value" id="analyticsKpiTroubles" style="color:var(--accent-amber);">0</div>
+              </div>
+              <div class="kpi-card" style="padding:1rem;">
+                <div class="kpi-title">Active Shifts Logged</div>
+                <div class="kpi-value" id="analyticsKpiShifts" style="color:var(--accent-cyan);">0</div>
+              </div>
+              <div class="kpi-card" style="padding:1rem;">
+                <div class="kpi-title">Avg Installs / Shift</div>
+                <div class="kpi-value" id="analyticsKpiAvg" style="color:var(--accent-emerald);">0.0</div>
+              </div>
+            </div>
+
+            <!-- Charts Row 1 -->
+            <div class="charts-grid">
+              <div class="chart-card">
+                <div class="panel-title" style="font-size:0.95rem; margin-bottom:1rem;">
+                  Daily Installation & Troubleshoot Trends
+                </div>
+                <div class="chart-wrapper">
+                  <canvas id="trendChart"></canvas>
+                </div>
+              </div>
+
+              <div class="chart-card">
+                <div class="panel-title" style="font-size:0.95rem; margin-bottom:1rem;">
+                  Team Performance Leaderboard
+                </div>
+                <div class="chart-wrapper">
+                  <canvas id="teamLeaderboardChart"></canvas>
+                </div>
+              </div>
+            </div>
+
+            <!-- Charts Row 2 -->
+            <div class="charts-grid">
+              <div class="chart-card">
+                <div class="panel-title" style="font-size:0.95rem; margin-bottom:1rem;">
+                  Troubleshoot Root Cause Distribution
+                </div>
+                <div class="chart-wrapper">
+                  <canvas id="troubleshootCategoriesChart"></canvas>
+                </div>
+              </div>
+
+              <div class="chart-card" style="justify-content:center;">
+                <div class="panel-title" style="font-size:0.95rem; margin-bottom:0.75rem;">
+                  Database Rollup SQL Engine
+                </div>
+                <p style="font-size:0.82rem; color:var(--text-muted); line-height:1.6; margin-bottom:1rem;">
+                  This rollup aggregates daily logs through virtualized SQL views (<code>view_team_rollups</code> & <code>view_technician_participation</code>), enabling immediate payroll and bonus calculation with sub-millisecond query performance.
+                </p>
+                <div style="background:var(--bg-surface-elevated); padding:0.85rem; border-radius:var(--radius-md); font-family:monospace; font-size:0.75rem; color:var(--accent-cyan);">
+                  SELECT team_name, SUM(quantity_completed) AS total_installs<br>
+                  FROM daily_teams JOIN installation_logs ON ...<br>
+                  GROUP BY team_name;
+                </div>
+              </div>
+            </div>
+
+            <!-- Technician Participation Breakdown -->
+            <div class="panel" style="margin-top:1.5rem;">
+              <div class="panel-header">
+                <h3 class="panel-title">Individual Technician Participation & Output Attribution</h3>
+              </div>
+              <div id="techContributionTableContainer">
+                <!-- Populated via analytics.js -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5. STAFF DIRECTORY -->
+        <section id="view-staff" class="page-view admin-only">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">
+                  <svg style="width:20px; height:20px; color:var(--primary-light);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  Staff & Technician Directory
+                </h3>
+                <p class="panel-subtitle">Manage field technicians, team leads, certifications, and active roster status</p>
+              </div>
+
+              <button id="btnOpenAddStaffModal" class="btn btn-primary btn-sm">
+                <svg style="width:14px; height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Add Staff Member</span>
+              </button>
+            </div>
+
+            <div id="staffTableContainer">
+              <!-- Populated via staff.js -->
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. EXPORTS & BACKUPS -->
+        <section id="view-export" class="page-view admin-only">
+          <div class="panel">
+            <div class="panel-header">
+              <div>
+                <h3 class="panel-title">
+                  <svg style="width:20px; height:20px; color:var(--primary-light);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293h3.172a1 1 0 00.707-.293l2.414-2.414a1 1 0 01.707-.293H20" />
+                  </svg>
+                  Data Export & Management Center
+                </h3>
+                <p class="panel-subtitle">Generate CSV/Excel formatted sheets for payroll, audits, or backup the system</p>
+              </div>
+            </div>
+
+            <div class="form-grid" style="grid-template-columns:repeat(auto-fit, minmax(300px, 1fr));">
+              <!-- Card 1: Payroll Summary -->
+              <div class="panel" style="background:var(--bg-surface-elevated); margin-bottom:0;">
+                <h4 style="margin-bottom:0.4rem; font-size:1rem;">Payroll & Performance Summary</h4>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1.25rem;">
+                  Export total shifts, attributed installations, troubleshoots, and average shift outputs per technician.
+                </p>
+                <button id="btnExportPayrollCSV" class="btn btn-primary btn-sm" style="width:100%;">
+                  Download Payroll CSV
+                </button>
+              </div>
+
+              <!-- Card 2: Daily Performance Logs -->
+              <div class="panel" style="background:var(--bg-surface-elevated); margin-bottom:0;">
+                <h4 style="margin-bottom:0.4rem; font-size:1rem;">Daily Team Logs</h4>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1.25rem;">
+                  Export comprehensive table containing dates, team names, leads, 3-5 member rosters, installations, and ticket counts.
+                </p>
+                <button id="btnExportDailyLogsCSV" class="btn btn-secondary btn-sm" style="width:100%;">
+                  Download Daily Logs CSV
+                </button>
+              </div>
+
+              <!-- Card 3: Attendance Matrix -->
+              <div class="panel" style="background:var(--bg-surface-elevated); margin-bottom:0;">
+                <h4 style="margin-bottom:0.4rem; font-size:1rem;">Attendance Records</h4>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1.25rem;">
+                  Export all staff attendance logs, statuses (Present/Late/Leave/Absent), check-in stamps, and notes.
+                </p>
+                <button id="btnExportAttendanceCSV" class="btn btn-secondary btn-sm" style="width:100%;">
+                  Download Attendance CSV
+                </button>
+              </div>
+            </div>
+
+            <!-- Database Backup & Seed Controls -->
+            <div style="margin-top:2rem; padding-top:1.5rem; border-top:1px solid var(--border-subtle); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+              <div>
+                <strong>Database Backup & Demo Data Generator</strong>
+                <p style="font-size:0.8rem; color:var(--text-muted);">Backup complete local database state or repopulate realistic demo records.</p>
+              </div>
+
+              <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+                <button id="btnExportJSONBackup" class="btn btn-secondary btn-sm">Export Full JSON Backup</button>
+                <label class="btn btn-secondary btn-sm" style="cursor:pointer; margin:0;">
+                  Import JSON Backup
+                  <input type="file" id="importBackupFileInput" accept=".json" style="display:none;">
+                </label>
+                <button id="btnResetDemoData" class="btn btn-secondary btn-sm" style="color:var(--accent-rose);">Reset to Demo Data</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- FOOTER (T&C, Privacy Policy, Custom Domain) -->
+        <footer style="margin-top: 3rem; padding: 1.75rem 1rem; border-top: 1px solid var(--border-subtle); color: var(--text-muted); font-size: 0.85rem; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem;">
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <a href="terms.html" style="color: var(--text-muted); text-decoration: none; font-weight: 500; transition: var(--transition);" onmouseover="this.style.color='var(--primary-light)'" onmouseout="this.style.color='var(--text-muted)'">Terms & Conditions</a>
+            <span style="color: var(--border-subtle);">•</span>
+            <a href="privacy.html" style="color: var(--text-muted); text-decoration: none; font-weight: 500; transition: var(--transition);" onmouseover="this.style.color='var(--primary-light)'" onmouseout="this.style.color='var(--text-muted)'">Privacy Policy</a>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span class="badge" style="background: rgba(37, 99, 235, 0.1); color: var(--primary-light); border: 1px solid rgba(37, 99, 235, 0.25); font-family: monospace;">
+              Domain: fieldops.app
+            </span>
+            <span style="font-size: 0.75rem; color: var(--text-dim);">Enterprise Field Edition</span>
+          </div>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT STAFF -->
+  <div id="staffModal" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h3 id="staffModalTitle" class="modal-title">Add Staff Member</h3>
+        <button class="btn-icon" onclick="window.staffModule.closeModal()" title="Close" aria-label="Close">
+          <svg style="width:16px; height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+      <form id="staffForm">
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="form-group">
+              <label class="form-label">Full Name <span class="req">*</span></label>
+              <input type="text" id="staffNameInput" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Role <span class="req">*</span></label>
+              <select id="staffRoleInput" class="form-select" required>
+                <option value="Technician">Technician</option>
+                <option value="Lead">Team Lead</option>
+                <option value="Supervisor">Supervisor</option>
+                <option value="Admin">Operations Admin</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" id="staffEmailInput" class="form-control">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Phone Number</label>
+              <input type="text" id="staffPhoneInput" class="form-control">
+            </div>
+
+            <div class="form-group full-width">
+              <label class="form-label">Skills & Certifications (Comma separated)</label>
+              <input type="text" id="staffSkillsInput" class="form-control">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <select id="staffStatusInput" class="form-select">
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" onclick="window.staffModule.closeModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Staff Member</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATIONS CONTAINER -->
+  <div id="toastContainer" class="toast-container"></div>
+
+  <!-- JAVASCRIPT BUNDLE -->
+  <script src="js/db.js"></script>
+  <script src="js/modules/teamLogger.js"></script>
+  <script src="js/modules/attendance.js"></script>
+  <script src="js/modules/analytics.js"></script>
+  <script src="js/modules/staff.js"></script>
+  <script src="js/modules/export.js"></script>
+  <script src="js/app.js"></script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>

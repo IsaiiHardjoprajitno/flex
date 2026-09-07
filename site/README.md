@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Staff Attendance & Field Work Order Tracking System
 
 A full-stack web application built with **Node.js**, **Express**, **PostgreSQL** (`pg`), and **React** + **Tailwind CSS**.
