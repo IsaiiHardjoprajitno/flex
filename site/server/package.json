@@ -1,0 +1,21 @@
+{
+  "name": "fieldops-server",
+  "version": "1.0.0",
+  "description": "Staff Attendance & Field Work Order Tracking System - Express API Server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "db:init": "psql $DATABASE_URL -f schema.sql",
+    "db:seed": "node scripts/seed.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.0",
+    "pg": "^8.13.0"
+  },
+  "devDependencies": {},
+  "keywords": ["fieldops", "attendance", "tracking", "express", "postgresql"],
+  "license": "MIT"
+}

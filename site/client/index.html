@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FieldOps | Staff Attendance & Work Order Tracking</title>
+  <meta name="description" content="Full-stack staff attendance, team assignment, and field work order tracking system with React and Tailwind CSS.">
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Site Favicon (Clean SVG Vector) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%232563EB'/%3E%3Cpath d='M18 4L7 17h8l-2 11 11-13h-8l2-11z' fill='%23FFFFFF'/%3E%3C/svg%3E">
+
+  <!-- Custom Domain Canonical & Meta -->
+  <link rel="canonical" href="https://fieldops.app/client/">
+  <meta name="theme-color" content="#2563EB">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="/manifest.json">
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="FieldOps">
+  <meta property="og:title" content="FieldOps | Staff Attendance & Work Order Tracking">
+  <meta property="og:description" content="Staff attendance, crew assignment, and field work order tracking system.">
+  <meta property="og:url" content="https://fieldops.app/client/">
+  <meta property="og:image" content="https://fieldops.app/icon.svg">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="FieldOps | Staff Attendance & Work Order Tracking">
+  <meta name="twitter:description" content="Staff attendance, crew assignment, and field work order tracking system.">
+  <meta name="twitter:image" content="https://fieldops.app/icon.svg">
+
+  <!-- Tailwind CSS CDN (v3) -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            surface: {
+              50: '#f8fafc',
+              100: '#f1f5f9',
+              200: '#e2e8f0',
+              700: '#1e293b',
+              800: '#0f172a',
+              900: '#0a0f1a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React 18 CDN + Babel standalone for JSX -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .animate-fade-in { animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    /* Scrollbar styling */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 8px; }
+  </style>
+</head>
+<body class="bg-surface-900 text-slate-100 min-h-screen">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useCallback, useMemo } = React;
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // API LAYER - Dual mode: Live backend or Demo fallback
+    // ═══════════════════════════════════════════════════════════════════════
+    const API_BASE = 'http://localhost:5000/api';
+    let backendOnline = false;
+
+    // Demo seed data
+    const DEMO_STAFF = [
+      { id: 1, name: 'Marcus Vance', role: 'lead', status: 'active' },
+      { id: 2, name: 'Elena Rostova', role: 'lead', status: 'active' },
+      { id: 3, name: 'Carlos Mendez', role: 'lead', status: 'active' },
+      { id: 4, name: 'Devon Wright', role: 'technician', status: 'active' },
+      { id: 5, name: 'Aisha Patel', role: 'technician', status: 'active' },
+      { id: 6, name: 'Liam O\'Connor', role: 'technician', status: 'active' },
+      { id: 7, name: 'Sofia Chen', role: 'technician', status: 'active' },
+      { id: 8, name: 'Jamal Washington', role: 'technician', status: 'active' },
+      { id: 9, name: 'Maya Lin', role: 'technician', status: 'active' },
+      { id: 10, name: 'Lucas Silva', role: 'technician', status: 'active' },
+      { id: 11, name: 'Hannah Abbott', role: 'technician', status: 'active' },
+    ];
+
+    const todayStr = () => new Date().toISOString().split('T')[0];
+    const dateOffset = (days) => {
+      const d = new Date(); d.setDate(d.getDate() + days);
+      return d.toISOString().split('T')[0];
+    };
+
+    const STORAGE_KEY_STAFF = 'fieldops_react_staff_v1';
+    const STORAGE_KEY_TEAMS = 'fieldops_react_teams_v1';
+    const STORAGE_KEY_ATTENDANCE = 'fieldops_react_attendance_v1';
+
+    // In-memory / persistent demo store
+    let demoStaff = [];
+    let demoTeams = [];
+    let demoAttendance = [];
+    let nextTeamId = 100;
+
+    function saveDemoState() {
+      try {
+        localStorage.setItem(STORAGE_KEY_STAFF, JSON.stringify(demoStaff));
+        localStorage.setItem(STORAGE_KEY_TEAMS, JSON.stringify(demoTeams));
+        localStorage.setItem(STORAGE_KEY_ATTENDANCE, JSON.stringify(demoAttendance));
+      } catch (e) { console.warn('[Storage] Failed to save demo state', e); }
+    }
+
+    // Initialize demo data
+    function initDemo() {
+      try {
+        const savedStaff = localStorage.getItem(STORAGE_KEY_STAFF);
+        const savedTeams = localStorage.getItem(STORAGE_KEY_TEAMS);
+        const savedAttendance = localStorage.getItem(STORAGE_KEY_ATTENDANCE);
+
+        if (savedStaff && savedTeams && savedAttendance) {
+          demoStaff = JSON.parse(savedStaff);
+          demoTeams = JSON.parse(savedTeams);
+          demoAttendance = JSON.parse(savedAttendance);
+          const maxId = demoTeams.reduce((m, t) => Math.max(m, t.id || 0), 100);
+          nextTeamId = maxId + 1;
+          return;
+        }
+      } catch (e) { console.warn('[Storage] Failed to parse local state', e); }
+
+      demoStaff = [...DEMO_STAFF];
+      const seedTeams = [
+        { id: 1, team_name: 'Team Alpha', work_date: dateOffset(-4), installations_count: 11, troubleshoot_count: 3, notes: 'North sector residential drops.', members: [1,4,5,6] },
+        { id: 2, team_name: 'Team Beta', work_date: dateOffset(-4), installations_count: 8, troubleshoot_count: 5, notes: 'South commercial zone.', members: [2,7,8,9] },
+        { id: 3, team_name: 'Team Alpha', work_date: dateOffset(-3), installations_count: 9, troubleshoot_count: 4, notes: 'Standard residential deployment.', members: [1,4,5,6] },
+        { id: 4, team_name: 'Team Beta', work_date: dateOffset(-3), installations_count: 7, troubleshoot_count: 6, notes: 'Heavy troubleshoot day.', members: [2,7,8,9] },
+        { id: 5, team_name: 'Team Alpha', work_date: dateOffset(-2), installations_count: 13, troubleshoot_count: 2, notes: 'Excellent day, 13 residential installs.', members: [1,4,5,10] },
+        { id: 6, team_name: 'Team Beta', work_date: dateOffset(-2), installations_count: 10, troubleshoot_count: 3, notes: 'Mixed commercial/residential.', members: [3,7,8,9] },
+        { id: 7, team_name: 'Team Alpha', work_date: dateOffset(-1), installations_count: 12, troubleshoot_count: 3, notes: 'Residential fiber drops.', members: [1,4,5,6] },
+        { id: 8, team_name: 'Team Beta', work_date: dateOffset(-1), installations_count: 6, troubleshoot_count: 7, notes: 'Signal degradation sweep.', members: [2,7,8,11] },
+        { id: 9, team_name: 'Team Alpha', work_date: todayStr(), installations_count: 10, troubleshoot_count: 4, notes: 'Active day on target.', members: [1,4,5,6] },
+        { id: 10, team_name: 'Team Beta', work_date: todayStr(), installations_count: 9, troubleshoot_count: 3, notes: 'Commercial Gigabit installs.', members: [2,7,8,9] },
+      ];
+      demoTeams = seedTeams;
+      nextTeamId = 100;
+      // Generate attendance from team assignments
+      demoAttendance = [];
+      seedTeams.forEach(t => {
+        t.members.forEach(uid => {
+          if (!demoAttendance.find(a => a.user_id === uid && a.work_date === t.work_date)) {
+            demoAttendance.push({ id: demoAttendance.length + 1, user_id: uid, work_date: t.work_date, status: 'present' });
+          }
+        });
+      });
+      saveDemoState();
+    }
+    initDemo();
+
+    const api = {
+      async checkBackend() {
+        try {
+          const r = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(2000) });
+          backendOnline = r.ok;
+        } catch { backendOnline = false; }
+        return backendOnline;
+      },
+
+      async getStaff() {
+        if (backendOnline) {
+          try {
+            const r = await fetch(`${API_BASE}/staff`);
+            const j = await r.json();
+            return j.data || [];
+          } catch { /* fallback */ }
+        }
+        return [...demoStaff];
+      },
+
+      async createStaff(body) {
+        if (backendOnline) {
+          const r = await fetch(`${API_BASE}/staff`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+          return (await r.json()).data;
+        }
+        const newStaff = { id: demoStaff.length + 1 + Math.floor(Math.random()*1000), ...body, created_at: new Date().toISOString() };
+        demoStaff.push(newStaff);
+        saveDemoState();
+        return newStaff;
+      },
+
+      async submitDailyLog(body) {
+        if (backendOnline) {
+          const r = await fetch(`${API_BASE}/teams/daily-log`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+          return await r.json();
+        }
+        // Demo mode
+        const team = {
+          id: ++nextTeamId,
+          team_name: body.team_name,
+          work_date: body.work_date,
+          installations_count: body.installations_count || 0,
+          troubleshoot_count: body.troubleshoot_count || 0,
+          notes: body.notes || '',
+          members: body.member_ids,
+        };
+        demoTeams.push(team);
+        // Update attendance
+        (body.attendance || body.member_ids.map(uid => ({ user_id: uid, status: 'present' }))).forEach(rec => {
+          const existing = demoAttendance.find(a => a.user_id === rec.user_id && a.work_date === body.work_date);
+          if (existing) { existing.status = rec.status; }
+          else { demoAttendance.push({ id: demoAttendance.length + 1, user_id: rec.user_id, work_date: body.work_date, status: rec.status }); }
+        });
+        saveDemoState();
+        return { success: true, data: { team } };
+      },
+
+      async getDailyReport(date) {
+        if (backendOnline) {
+          try {
+            const r = await fetch(`${API_BASE}/reports/daily?date=${date}`);
+            return (await r.json()).data;
+          } catch { /* fallback */ }
+        }
+        const teams = demoTeams.filter(t => t.work_date === date).map(t => ({
+          team_id: t.id, team_name: t.team_name, work_date: t.work_date,
+          installations_count: t.installations_count, troubleshoot_count: t.troubleshoot_count, notes: t.notes,
+          members: t.members.map(uid => DEMO_STAFF.find(s => s.id === uid)).filter(Boolean),
+        }));
+        return {
+          date,
+          total_installations: teams.reduce((s,t) => s + t.installations_count, 0),
+          total_troubleshoots: teams.reduce((s,t) => s + t.troubleshoot_count, 0),
+          teams,
+        };
+      },
+
+      async getSummaryReport(timeframe) {
+        if (backendOnline) {
+          try {
+            const r = await fetch(`${API_BASE}/reports/summary?timeframe=${timeframe}`);
+            return (await r.json()).data;
+          } catch { /* fallback */ }
+        }
+        const now = new Date();
+        let cutoff = new Date(now);
+        if (timeframe === 'daily') cutoff.setHours(0,0,0,0);
+        else if (timeframe === 'weekly') cutoff.setDate(cutoff.getDate() - 7);
+        else cutoff.setDate(cutoff.getDate() - 30);
+
+        const filtered = demoTeams.filter(t => new Date(t.work_date) >= cutoff);
+        const byName = {};
+        filtered.forEach(t => {
+          if (!byName[t.team_name]) byName[t.team_name] = { team_name: t.team_name, active_days: 0, total_installations: 0, total_troubleshoots: 0, dates: new Set() };
+          byName[t.team_name].total_installations += t.installations_count;
+          byName[t.team_name].total_troubleshoots += t.troubleshoot_count;
+          byName[t.team_name].dates.add(t.work_date);
+        });
+        const teams = Object.values(byName).map(t => ({
+          ...t, active_days: t.dates.size,
+          avg_installations_per_day: t.dates.size > 0 ? (t.total_installations / t.dates.size).toFixed(1) : '0',
+          avg_troubleshoots_per_day: t.dates.size > 0 ? (t.total_troubleshoots / t.dates.size).toFixed(1) : '0',
+        }));
+        return {
+          timeframe,
+          grand_total_installations: teams.reduce((s,t) => s + t.total_installations, 0),
+          grand_total_troubleshoots: teams.reduce((s,t) => s + t.total_troubleshoots, 0),
+          teams,
+        };
+      },
+    };
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // TOAST COMPONENT
+    // ═══════════════════════════════════════════════════════════════════════
+    function Toast({ message, type, onClose }) {
+      useEffect(() => {
+        const timer = setTimeout(onClose, 3500);
+        return () => clearTimeout(timer);
+      }, [onClose]);
+
+      const colors = {
+        success: 'border-emerald-500 bg-emerald-500/10 text-emerald-300',
+        error: 'border-rose-500 bg-rose-500/10 text-rose-300',
+        info: 'border-blue-500 bg-blue-500/10 text-blue-300',
+      };
+
+      return (
+        <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl border-l-4 shadow-2xl backdrop-blur-sm animate-fade-in ${colors[type] || colors.info}`}>
+          {message}
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // KPI METRIC CARD
+    // ═══════════════════════════════════════════════════════════════════════
+    function MetricCard({ title, value, subtitle, icon, accentColor = 'blue' }) {
+      const accentMap = {
+        blue: 'from-blue-500/20 to-blue-600/5 border-blue-500/30 text-blue-400',
+        emerald: 'from-emerald-500/20 to-emerald-600/5 border-emerald-500/30 text-emerald-400',
+        amber: 'from-amber-500/20 to-amber-600/5 border-amber-500/30 text-amber-400',
+        cyan: 'from-cyan-500/20 to-cyan-600/5 border-cyan-500/30 text-cyan-400',
+      };
+      const accent = accentMap[accentColor] || accentMap.blue;
+      const textColor = accent.split(' ').pop();
+
+      return (
+        <div className={`bg-gradient-to-br ${accent} rounded-2xl border p-5 relative overflow-hidden transition-all hover:scale-[1.02] hover:shadow-lg`}>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">{title}</span>
+            <span className="text-slate-300">{icon}</span>
+          </div>
+          <div className={`text-3xl font-extrabold tracking-tight ${textColor}`}>{value}</div>
+          {subtitle && <p className="text-xs text-slate-500 mt-1">{subtitle}</p>}
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // DAILY LOG ENTRY FORM
+    // ═══════════════════════════════════════════════════════════════════════
+    function DailyLogForm({ staff, onSubmitSuccess }) {
+      const [teamName, setTeamName] = useState('');
+      const [workDate, setWorkDate] = useState(todayStr());
+      const [selectedIds, setSelectedIds] = useState(new Set());
+      const [attendanceOverrides, setAttendanceOverrides] = useState({});
+      const [installs, setInstalls] = useState(0);
+      const [troubleshoots, setTroubles] = useState(0);
+      const [notes, setNotes] = useState('');
+      const [submitting, setSubmitting] = useState(false);
+
+      const toggleMember = (id) => {
+        setSelectedIds(prev => {
+          const next = new Set(prev);
+          if (next.has(id)) {
+            next.delete(id);
+            const ao = { ...attendanceOverrides };
+            delete ao[id];
+            setAttendanceOverrides(ao);
+          } else {
+            if (next.size >= 5) return prev;
+            next.add(id);
+          }
+          return next;
+        });
+      };
+
+      const memberCount = selectedIds.size;
+      const isValidCount = memberCount >= 3 && memberCount <= 5;
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!teamName.trim()) return;
+        if (!isValidCount) return;
+        setSubmitting(true);
+
+        const attendance = Array.from(selectedIds).map(uid => ({
+          user_id: uid,
+          status: attendanceOverrides[uid] || 'present',
+        }));
+
+        try {
+          await api.submitDailyLog({
+            team_name: teamName,
+            work_date: workDate,
+            member_ids: Array.from(selectedIds),
+            installations_count: Number(installs),
+            troubleshoot_count: Number(troubleshoots),
+            notes,
+            attendance,
+          });
+          onSubmitSuccess(`Team "${teamName}" logged successfully for ${workDate}!`);
+          // Reset
+          setTeamName('');
+          setSelectedIds(new Set());
+          setAttendanceOverrides({});
+          setInstalls(0);
+          setTroubles(0);
+          setNotes('');
+        } catch (err) {
+          onSubmitSuccess('Error submitting log: ' + err.message, 'error');
+        } finally {
+          setSubmitting(false);
+        }
+      };
+
+      return (
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Team Name + Date Row */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-sm font-semibold text-slate-300 mb-1.5">
+                Team Name <span className="text-rose-400">*</span>
+              </label>
+              <input
+                type="text" value={teamName} onChange={e => setTeamName(e.target.value)}
+                className="w-full bg-surface-800 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-slate-300 mb-1.5">
+                Date <span className="text-rose-400">*</span>
+              </label>
+              <input
+                type="date" value={workDate} onChange={e => setWorkDate(e.target.value)}
+                className="w-full bg-surface-800 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Staff Multi-Select (3 to 5 constraint) */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm font-semibold text-slate-300">
+                Select 3 to 5 Crew Members <span className="text-rose-400">*</span>
+              </label>
+              <span className={`text-xs font-bold px-3 py-1 rounded-md border ${isValidCount ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : 'bg-rose-500/15 text-rose-400 border-rose-500/30'}`}>
+                {memberCount} / 3 to 5 selected
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 mb-3">Selected members are automatically marked "Present" unless overridden below.</p>
+            <div className="bg-surface-800 border border-slate-700 rounded-xl p-4">
+              <div className="flex flex-wrap gap-2.5">
+                {staff.map(s => {
+                  const isSelected = selectedIds.has(s.id);
+                  const initials = s.name.split(' ').map(n => n[0]).join('').slice(0, 2);
+                  return (
+                    <button key={s.id} type="button" onClick={() => toggleMember(s.id)}
+                      className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium border transition-all
+                        ${isSelected
+                          ? 'bg-blue-500/20 border-blue-400 text-white shadow-md shadow-blue-500/10'
+                          : 'bg-surface-700 border-slate-600 text-slate-400 hover:border-slate-400 hover:text-slate-200'
+                        }`}>
+                      <span className={`w-7 h-7 rounded-md text-xs font-bold flex items-center justify-center ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-600 text-slate-300'}`}>
+                        {initials}
+                      </span>
+                      {s.name}
+                      <span className="text-[0.65rem] text-slate-500">[{s.role}]</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Attendance Overrides for selected members */}
+          {memberCount > 0 && (
+            <div>
+              <label className="block text-sm font-semibold text-slate-300 mb-2">
+                Attendance Check-in
+              </label>
+              <div className="bg-surface-800 border border-slate-700 rounded-xl p-4 space-y-2">
+                {Array.from(selectedIds).map(uid => {
+                  const user = staff.find(s => s.id === uid);
+                  const status = attendanceOverrides[uid] || 'present';
+                  return (
+                    <div key={uid} className="flex items-center justify-between py-1.5">
+                      <span className="text-sm text-slate-300">{user?.name}</span>
+                      <select
+                        value={status}
+                        onChange={e => setAttendanceOverrides(prev => ({ ...prev, [uid]: e.target.value }))}
+                        className="bg-surface-700 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="present">Present</option>
+                        <option value="absent">Absent</option>
+                        <option value="leave">Leave</option>
+                      </select>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Performance Inputs */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-5">
+              <label className="block text-sm font-semibold text-blue-300 mb-1.5">
+                Installations Completed
+              </label>
+              <input type="number" min="0" value={installs} onChange={e => setInstalls(e.target.value)}
+                className="w-full bg-surface-800 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all" />
+            </div>
+            <div className="bg-amber-500/5 border border-amber-500/20 rounded-xl p-5">
+              <label className="block text-sm font-semibold text-amber-300 mb-1.5">
+                Troubleshoot Cases Resolved
+              </label>
+              <input type="number" min="0" value={troubleshoots} onChange={e => setTroubles(e.target.value)}
+                className="w-full bg-surface-800 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all" />
+            </div>
+          </div>
+
+          {/* Notes */}
+          <div>
+            <label className="block text-sm font-semibold text-slate-300 mb-1.5">Notes (Optional)</label>
+            <textarea value={notes} onChange={e => setNotes(e.target.value)} rows="3"
+              className="w-full bg-surface-800 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all resize-y" />
+          </div>
+
+          {/* Submit */}
+          <div className="flex justify-end gap-3">
+            <button type="submit" disabled={submitting || !isValidCount || !teamName.trim()}
+              className={`px-6 py-3 rounded-xl font-semibold text-white shadow-lg transition-all flex items-center gap-2
+                ${submitting || !isValidCount || !teamName.trim()
+                  ? 'bg-slate-700 cursor-not-allowed opacity-50'
+                  : 'bg-blue-600 hover:bg-blue-500 hover:-translate-y-0.5 shadow-blue-500/25'
+                }`}>
+              {submitting ? (
+                <span>Saving...</span>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
+                  <span>Submit Daily Log</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // PERFORMANCE DASHBOARD
+    // ═══════════════════════════════════════════════════════════════════════
+    function PerformanceDashboard({ staff }) {
+      const [timeframe, setTimeframe] = useState('weekly');
+      const [dailyDate, setDailyDate] = useState(todayStr());
+      const [summary, setSummary] = useState(null);
+      const [dailyReport, setDailyReport] = useState(null);
+      const [teamFilter, setTeamFilter] = useState('All');
+      const [refreshKey, setRefreshKey] = useState(0);
+
+      useEffect(() => {
+        api.getSummaryReport(timeframe).then(setSummary);
+      }, [timeframe, refreshKey]);
+
+      useEffect(() => {
+        api.getDailyReport(dailyDate).then(setDailyReport);
+      }, [dailyDate, refreshKey]);
+
+      const filteredTeams = useMemo(() => {
+        if (!dailyReport?.teams) return [];
+        if (teamFilter === 'All') return dailyReport.teams;
+        return dailyReport.teams.filter(t => t.team_name === teamFilter);
+      }, [dailyReport, teamFilter]);
+
+      const allTeamNames = useMemo(() => {
+        if (!dailyReport?.teams) return [];
+        return [...new Set(dailyReport.teams.map(t => t.team_name))];
+      }, [dailyReport]);
+
+      return (
+        <div className="space-y-6 animate-fade-in">
+          {/* Controls */}
+          <div className="flex flex-wrap items-center gap-4">
+            <div>
+              <label className="text-xs font-semibold text-slate-500 mb-1 block">Timeframe</label>
+              <div className="flex bg-surface-800 rounded-xl border border-slate-700 p-1 gap-1">
+                {['daily', 'weekly', 'monthly'].map(tf => (
+                  <button key={tf} onClick={() => setTimeframe(tf)}
+                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all capitalize
+                      ${timeframe === tf ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}>
+                    {tf === 'daily' ? 'Today' : tf === 'weekly' ? 'This Week' : 'This Month'}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-500 mb-1 block">View Date</label>
+              <input type="date" value={dailyDate} onChange={e => setDailyDate(e.target.value)}
+                className="bg-surface-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-slate-500 mb-1 block">Team</label>
+              <select value={teamFilter} onChange={e => setTeamFilter(e.target.value)}
+                className="bg-surface-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                <option value="All">All Teams</option>
+                {allTeamNames.map(n => <option key={n} value={n}>{n}</option>)}
+              </select>
+            </div>
+            <div className="ml-auto">
+              <button onClick={() => setRefreshKey(k => k+1)}
+                className="px-4 py-2.5 bg-surface-800 border border-slate-700 rounded-xl text-sm text-slate-300 hover:text-white hover:border-slate-500 transition-all inline-flex items-center gap-2">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                <span>Refresh</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Summary KPIs */}
+          {summary && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <MetricCard
+                title="Total Installations"
+                value={summary.grand_total_installations}
+                subtitle={`${timeframe} period`}
+                accentColor="blue"
+                icon={<svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>}
+              />
+              <MetricCard
+                title="Total Troubleshoots"
+                value={summary.grand_total_troubleshoots}
+                subtitle={`${timeframe} period`}
+                accentColor="amber"
+                icon={<svg className="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
+              />
+              <MetricCard
+                title="Active Teams"
+                value={summary.teams?.length || 0}
+                subtitle="Distinct teams"
+                accentColor="cyan"
+                icon={<svg className="w-5 h-5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
+              />
+              <MetricCard
+                title="Avg Installs/Day"
+                value={
+                  summary.teams?.length > 0
+                    ? (summary.grand_total_installations / Math.max(1, summary.teams.reduce((s,t) => s + Number(t.active_days || 1), 0) / summary.teams.length)).toFixed(1)
+                    : '0'
+                }
+                subtitle="Per team shift"
+                accentColor="emerald"
+                icon={<svg className="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>}
+              />
+            </div>
+          )}
+
+          {/* Summary by Team */}
+          {summary?.teams?.length > 0 && (
+            <div className="bg-surface-800 border border-slate-700/60 rounded-2xl overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-700/60">
+                <h3 className="font-bold text-lg">Team Performance Summary ({timeframe})</h3>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-surface-700/50">
+                      <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Team</th>
+                      <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Active Days</th>
+                      <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Total Installs</th>
+                      <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Total Troubleshoots</th>
+                      <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Avg/Day</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-700/40">
+                    {summary.teams.map((t, i) => (
+                      <tr key={i} className="hover:bg-surface-700/30 transition-colors">
+                        <td className="px-5 py-3.5 font-semibold text-slate-200">{t.team_name}</td>
+                        <td className="px-5 py-3.5 text-slate-300">{t.active_days}</td>
+                        <td className="px-5 py-3.5 font-bold text-emerald-400">{t.total_installations}</td>
+                        <td className="px-5 py-3.5 font-bold text-amber-400">{t.total_troubleshoots}</td>
+                        <td className="px-5 py-3.5 text-slate-400">{t.avg_installations_per_day} installs</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Daily Detail Table */}
+          {dailyReport && (
+            <div className="bg-surface-800 border border-slate-700/60 rounded-2xl overflow-hidden">
+              <div className="px-5 py-4 border-b border-slate-700/60 flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-lg">Daily Detail: {dailyDate}</h3>
+                  <p className="text-xs text-slate-500">
+                    {dailyReport.total_installations} installs • {dailyReport.total_troubleshoots} troubleshoots
+                  </p>
+                </div>
+              </div>
+              {filteredTeams.length === 0 ? (
+                <div className="p-8 text-center text-slate-500">No team logs found for this date.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-surface-700/50">
+                        <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Team</th>
+                        <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Assigned Members</th>
+                        <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Installs</th>
+                        <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Troubleshoots</th>
+                        <th className="px-5 py-3 text-left text-xs font-bold text-slate-400 uppercase tracking-wider">Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-700/40">
+                      {filteredTeams.map((t, i) => (
+                        <tr key={i} className="hover:bg-surface-700/30 transition-colors">
+                          <td className="px-5 py-3.5 font-semibold text-slate-200">{t.team_name}</td>
+                          <td className="px-5 py-3.5">
+                            <div className="flex flex-wrap gap-1.5">
+                              {(t.members || []).map(m => (
+                                <span key={m.id || m.name} className="text-[0.7rem] bg-surface-700 px-2.5 py-1 rounded-full border border-slate-600 text-slate-300">
+                                  {m.name}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="px-5 py-3.5 font-bold text-emerald-400">{t.installations_count}</td>
+                          <td className="px-5 py-3.5 font-bold text-amber-400">{t.troubleshoot_count}</td>
+                          <td className="px-5 py-3.5 text-slate-400 text-xs max-w-xs truncate">{t.notes || '-'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // MAIN APP COMPONENT
+    // ═══════════════════════════════════════════════════════════════════════
+    function App() {
+      const [tab, setTab] = useState('log');
+      const [staff, setStaff] = useState([]);
+      const [toast, setToast] = useState(null);
+      const [isBackendUp, setIsBackendUp] = useState(false);
+
+      useEffect(() => {
+        api.checkBackend().then(setIsBackendUp);
+        api.getStaff().then(setStaff);
+      }, []);
+
+      const showToast = useCallback((message, type = 'success') => {
+        setToast({ message, type });
+      }, []);
+
+      const handleLogSuccess = useCallback((message, type = 'success') => {
+        showToast(message, type);
+        // Refresh staff list
+        api.getStaff().then(setStaff);
+      }, [showToast]);
+
+      const tabs = [
+        {
+          id: 'log',
+          label: 'Daily Log Entry',
+          icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+        },
+        {
+          id: 'dashboard',
+          label: 'Performance Dashboard',
+          icon: <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+        },
+      ];
+
+      return (
+        <div className="min-h-screen flex flex-col">
+          {/* Top Navigation Header */}
+          <header className="sticky top-0 z-30 bg-surface-900/90 backdrop-blur-xl border-b border-slate-700/60">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex items-center justify-between h-16">
+                {/* Brand */}
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/20">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                  </div>
+                  <div>
+                    <h1 className="text-base font-bold text-slate-100 tracking-tight">FieldOps Dispatch & Work Tracking</h1>
+                    <p className="text-[0.65rem] text-slate-400 font-medium uppercase tracking-widest">Technician Rosters • Daily Installations • Shift Attendance</p>
+                  </div>
+                </div>
+
+                {/* Tab navigation */}
+                <nav className="flex bg-surface-800 rounded-xl border border-slate-700 p-1 gap-1">
+                  {tabs.map(t => (
+                    <button key={t.id} onClick={() => setTab(t.id)}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all
+                        ${tab === t.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}>
+                      <span>{t.icon}</span>
+                      <span className="hidden sm:inline">{t.label}</span>
+                    </button>
+                  ))}
+                </nav>
+
+                {/* Backend Status & Domain */}
+                <div className="flex items-center gap-3">
+                  <span className="hidden md:inline-block px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 text-xs font-mono">
+                    fieldops.app
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${isBackendUp ? 'bg-emerald-400 shadow-lg shadow-emerald-400/50' : 'bg-amber-400 shadow-lg shadow-amber-400/50'}`}></span>
+                    <span className="text-xs text-slate-400">{isBackendUp ? 'API Connected' : 'Demo Mode'}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* Main Content */}
+          <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            {tab === 'log' && (
+              <div className="animate-fade-in">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-extrabold tracking-tight">Daily Team Log Entry</h2>
+                  <p className="text-sm text-slate-400 mt-1">Select team lead, tag 3 to 5 crew members, log attendance and daily installations & troubleshoot counts</p>
+                </div>
+                <div className="bg-surface-800/60 border border-slate-700/50 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
+                  <DailyLogForm staff={staff} onSubmitSuccess={handleLogSuccess} />
+                </div>
+              </div>
+            )}
+
+            {tab === 'dashboard' && (
+              <div className="animate-fade-in">
+                <div className="mb-6">
+                  <h2 className="text-2xl font-extrabold tracking-tight">Performance Dashboard</h2>
+                  <p className="text-sm text-slate-400 mt-1">Aggregated metrics filtered by date range, team, installations and troubleshoot counts</p>
+                </div>
+                <PerformanceDashboard staff={staff} />
+              </div>
+            )}
+          </main>
+
+          {/* Footer (T&C, Privacy Policy, Custom Domain) */}
+          <footer className="border-t border-slate-800 py-6 mt-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-4 text-xs text-slate-500">
+              <div className="flex items-center gap-4">
+                <span>FieldOps Tracker v1.0</span>
+                <span className="text-slate-700">•</span>
+                <a href="terms.html" className="text-slate-400 hover:text-blue-400 transition-colors">Terms & Conditions</a>
+                <span className="text-slate-700">•</span>
+                <a href="privacy.html" className="text-slate-400 hover:text-blue-400 transition-colors">Privacy Policy</a>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono">
+                  fieldops.app
+                </span>
+                <span>Parameterized SQL • Transactional Endpoints</span>
+              </div>
+            </div>
+          </footer>
+
+          {/* Toast */}
+          {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+        </div>
+      );
+    }
+
+    // ── Mount React App ─────────────────────────────────────────────────
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+
+  <!-- PWA Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
