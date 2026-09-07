@@ -14,6 +14,7 @@ const STORAGE_KEYS = {
 class FieldOpsDB {
   constructor() {
     this.listeners = [];
+    this.remoteSyncing = false;
     this.init();
   }
 
@@ -40,6 +41,91 @@ class FieldOpsDB {
     this.listeners.forEach(fn => fn(event, payload));
   }
 
+  getSupabase() {
+    return window.supabaseAuth?.client || null;
+  }
+
+  async syncRemote() {
+    const supabase = this.getSupabase();
+    if (!supabase || this.remoteSyncing) return;
+    this.remoteSyncing = true;
+
+    try {
+      const [staffResult, attendanceResult, teamsResult, membersResult, installsResult, troublesResult] = await Promise.all([
+        supabase.from('staff').select('*').order('name'),
+        supabase.from('daily_attendance').select('*'),
+        supabase.from('daily_teams').select('*').order('date', { ascending: false }),
+        supabase.from('team_members').select('*'),
+        supabase.from('installation_logs').select('*'),
+        supabase.from('troubleshoot_logs').select('*')
+      ]);
+      const failed = [staffResult, attendanceResult, teamsResult, membersResult, installsResult, troublesResult].find(result => result.error);
+      if (failed) throw failed.error;
+
+      const membersByTeam = {};
+      membersResult.data.forEach(member => {
+        if (!membersByTeam[member.team_id]) membersByTeam[member.team_id] = [];
+        membersByTeam[member.team_id].push(member.staff_id);
+      });
+
+      const teams = teamsResult.data.map(team => ({
+        id: team.id,
+        teamName: team.team_name,
+        date: team.date,
+        leadId: team.lead_id,
+        members: membersByTeam[team.id] || [],
+        vehicleZone: team.vehicle_zone || '',
+        notes: team.notes || ''
+      }));
+      const attendance = attendanceResult.data.map(record => ({
+        id: record.id,
+        staffId: record.staff_id,
+        date: record.date,
+        status: record.status,
+        checkInTime: record.check_in_time || null,
+        notes: record.notes || ''
+      }));
+      const installs = installsResult.data.map(log => ({
+        id: log.id,
+        teamId: log.team_id,
+        date: log.date,
+        quantityCompleted: log.quantity_completed,
+        installType: log.install_type || 'Standard Fiber',
+        locationZone: log.location_zone || '',
+        hoursSpent: log.hours_spent || 0,
+        notes: log.notes || ''
+      }));
+      const troubles = troublesResult.data.map(log => ({
+        id: log.id,
+        teamId: log.team_id,
+        date: log.date,
+        casesResolved: log.cases_resolved,
+        category: log.category,
+        resolutionNotes: log.resolution_notes || ''
+      }));
+
+      localStorage.setItem(STORAGE_KEYS.STAFF, JSON.stringify(staffResult.data));
+      localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(attendance));
+      localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(teams));
+      localStorage.setItem(STORAGE_KEYS.INSTALLS, JSON.stringify(installs));
+      localStorage.setItem(STORAGE_KEYS.TROUBLESHOOTS, JSON.stringify(troubles));
+      this.notify('data_reloaded');
+    } catch (error) {
+      console.error('[Supabase] Sync failed:', error.message);
+      window.app?.showToast('Could not load shared records. Check your Supabase policies.', 'error');
+    } finally {
+      this.remoteSyncing = false;
+    }
+  }
+
+  queueRemote(operation) {
+    const supabase = this.getSupabase();
+    if (supabase) operation(supabase).catch(error => {
+      console.error('[Supabase] Save failed:', error.message);
+      window.app?.showToast('Record saved locally but not to the shared database.', 'error');
+    });
+  }
+
   // Staff Methods
   getStaff() {
     return JSON.parse(localStorage.getItem(STORAGE_KEYS.STAFF) || '[]');
@@ -55,10 +141,20 @@ class FieldOpsDB {
     if (index >= 0) {
       list[index] = { ...list[index], ...staffMember };
     } else {
-      if (!staffMember.id) staffMember.id = 'stf-' + Date.now();
+      if (!staffMember.id) staffMember.id = crypto.randomUUID();
       list.push(staffMember);
     }
     localStorage.setItem(STORAGE_KEYS.STAFF, JSON.stringify(list));
+    this.queueRemote(supabase => supabase.from('staff').upsert({
+      id: staffMember.id,
+      name: staffMember.name,
+      email: staffMember.email || null,
+      role: staffMember.role,
+      status: staffMember.status,
+      skills: staffMember.skills || [],
+      phone: staffMember.phone || null,
+      updated_at: new Date().toISOString()
+    }));
     this.notify('staff_updated', list);
     return staffMember;
   }
@@ -75,8 +171,9 @@ class FieldOpsDB {
   setAttendanceRecord(staffId, date, status, checkInTime = null, notes = '') {
     const list = this.getAttendance();
     const index = list.findIndex(a => a.staffId === staffId && a.date === date);
+    const existing = index >= 0 ? list[index] : null;
     const record = {
-      id: `att-${date}-${staffId}`,
+      id: existing?.id || crypto.randomUUID(),
       staffId,
       date,
       status,
@@ -90,6 +187,14 @@ class FieldOpsDB {
       list.push(record);
     }
     localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(list));
+    this.queueRemote(supabase => supabase.from('daily_attendance').upsert({
+      id: record.id,
+      staff_id: staffId,
+      date,
+      status,
+      check_in_time: record.checkInTime,
+      notes
+    }, { onConflict: 'staff_id,date' }));
     this.notify('attendance_updated', record);
     return record;
   }
@@ -106,7 +211,7 @@ class FieldOpsDB {
   saveDailyTeam(teamData) {
     const list = this.getTeams();
     if (!teamData.id) {
-      teamData.id = 'team-' + Date.now();
+      teamData.id = crypto.randomUUID();
     }
     const index = list.findIndex(t => t.id === teamData.id);
     if (index >= 0) {
@@ -115,6 +220,23 @@ class FieldOpsDB {
       list.push(teamData);
     }
     localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(list));
+    this.queueRemote(async supabase => {
+      const { error } = await supabase.from('daily_teams').upsert({
+        id: teamData.id,
+        team_name: teamData.teamName,
+        date: teamData.date,
+        lead_id: teamData.leadId,
+        vehicle_zone: teamData.vehicleZone || null,
+        notes: teamData.notes || null
+      });
+      if (error) throw error;
+      await supabase.from('team_members').delete().eq('team_id', teamData.id);
+      const members = (teamData.members || []).map(staffId => ({ team_id: teamData.id, staff_id: staffId }));
+      if (members.length) {
+        const result = await supabase.from('team_members').insert(members);
+        if (result.error) throw result.error;
+      }
+    });
 
     // Automatically mark all team members as Present for this date
     if (teamData.members && teamData.date) {
@@ -136,6 +258,7 @@ class FieldOpsDB {
     let troubles = this.getTroubleshootLogs().filter(t => t.teamId !== teamId);
     localStorage.setItem(STORAGE_KEYS.INSTALLS, JSON.stringify(installs));
     localStorage.setItem(STORAGE_KEYS.TROUBLESHOOTS, JSON.stringify(troubles));
+    this.queueRemote(supabase => supabase.from('daily_teams').delete().eq('id', teamId));
 
     this.notify('teams_updated', { deleted: teamId });
   }
@@ -147,7 +270,7 @@ class FieldOpsDB {
 
   saveInstallLog(log) {
     const list = this.getInstallLogs();
-    if (!log.id) log.id = 'inst-' + Date.now();
+    if (!log.id) log.id = crypto.randomUUID();
     const index = list.findIndex(i => i.id === log.id || (i.teamId === log.teamId && i.date === log.date));
     if (index >= 0) {
       list[index] = { ...list[index], ...log };
@@ -155,6 +278,16 @@ class FieldOpsDB {
       list.push(log);
     }
     localStorage.setItem(STORAGE_KEYS.INSTALLS, JSON.stringify(list));
+    this.queueRemote(supabase => supabase.from('installation_logs').upsert({
+      id: log.id,
+      team_id: log.teamId,
+      date: log.date,
+      quantity_completed: log.quantityCompleted,
+      install_type: log.installType,
+      location_zone: log.locationZone || null,
+      hours_spent: log.hoursSpent || 0,
+      notes: log.notes || null
+    }));
     this.notify('installs_updated', log);
     return log;
   }
@@ -166,7 +299,7 @@ class FieldOpsDB {
 
   saveTroubleshootLog(log) {
     const list = this.getTroubleshootLogs();
-    if (!log.id) log.id = 'trb-' + Date.now();
+    if (!log.id) log.id = crypto.randomUUID();
     const index = list.findIndex(t => t.id === log.id || (t.teamId === log.teamId && t.date === log.date));
     if (index >= 0) {
       list[index] = { ...list[index], ...log };
@@ -174,6 +307,14 @@ class FieldOpsDB {
       list.push(log);
     }
     localStorage.setItem(STORAGE_KEYS.TROUBLESHOOTS, JSON.stringify(list));
+    this.queueRemote(supabase => supabase.from('troubleshoot_logs').upsert({
+      id: log.id,
+      team_id: log.teamId,
+      date: log.date,
+      cases_resolved: log.casesResolved,
+      category: log.category,
+      resolution_notes: log.resolutionNotes || null
+    }));
     this.notify('troubleshoots_updated', log);
     return log;
   }

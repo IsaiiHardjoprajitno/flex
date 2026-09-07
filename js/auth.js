@@ -9,6 +9,7 @@
     const gate = document.getElementById('authGate');
     if (app) app.hidden = !isSignedIn;
     if (gate) gate.hidden = isSignedIn;
+    if (isSignedIn) window.db?.syncRemote();
   }
 
   function showMessage(message) {
