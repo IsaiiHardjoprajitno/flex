@@ -3,29 +3,13 @@
  */
 
 const STORAGE_KEYS = {
-  STAFF: 'fieldops_staff_v1',
-  ATTENDANCE: 'fieldops_attendance_v1',
-  TEAMS: 'fieldops_teams_v1',
-  INSTALLS: 'fieldops_installs_v1',
-  TROUBLESHOOTS: 'fieldops_troubleshoots_v1',
-  SETTINGS: 'fieldops_settings_v1'
+  STAFF: 'fieldops_staff_v2',
+  ATTENDANCE: 'fieldops_attendance_v2',
+  TEAMS: 'fieldops_teams_v2',
+  INSTALLS: 'fieldops_installs_v2',
+  TROUBLESHOOTS: 'fieldops_troubleshoots_v2',
+  SETTINGS: 'fieldops_settings_v2'
 };
-
-// Initial Seed Data Generator
-const INITIAL_STAFF = [
-  { id: 'stf-001', name: 'Marcus Vance', role: 'Lead', email: 'marcus.v@fieldops.io', status: 'Active', phone: '+1 555-0101', skills: ['Fiber Splicing', 'OTDR', 'Team Leadership'] },
-  { id: 'stf-002', name: 'Elena Rostova', role: 'Lead', email: 'elena.r@fieldops.io', status: 'Active', phone: '+1 555-0102', skills: ['Troubleshooting', 'ONT Provisioning', 'Safety'] },
-  { id: 'stf-003', name: 'Carlos Mendez', role: 'Lead', email: 'carlos.m@fieldops.io', status: 'Active', phone: '+1 555-0103', skills: ['Commercial Drops', 'Aerial Fiber', 'Leadership'] },
-  { id: 'stf-004', name: 'Devon Wright', role: 'Technician', email: 'devon.w@fieldops.io', status: 'Active', phone: '+1 555-0104', skills: ['Residential Installs', 'Cat6/RG6'] },
-  { id: 'stf-005', name: 'Aisha Patel', role: 'Technician', email: 'aisha.p@fieldops.io', status: 'Active', phone: '+1 555-0105', skills: ['Fiber Splicing', 'Drop Cabling'] },
-  { id: 'stf-006', name: 'Liam O\'Connor', role: 'Technician', email: 'liam.o@fieldops.io', status: 'Active', phone: '+1 555-0106', skills: ['ONT Config', 'Mesh Wi-Fi'] },
-  { id: 'stf-007', name: 'Sofia Chen', role: 'Technician', email: 'sofia.c@fieldops.io', status: 'Active', phone: '+1 555-0107', skills: ['Troubleshooting', 'Signal Loss Analysis'] },
-  { id: 'stf-008', name: 'Jamal Washington', role: 'Technician', email: 'jamal.w@fieldops.io', status: 'Active', phone: '+1 555-0108', skills: ['Aerial Installs', 'Underground Conduit'] },
-  { id: 'stf-009', name: 'Maya Lin', role: 'Technician', email: 'maya.l@fieldops.io', status: 'Active', phone: '+1 555-0109', skills: ['Residential Installs', 'Customer Support'] },
-  { id: 'stf-010', name: 'Lucas Silva', role: 'Technician', email: 'lucas.s@fieldops.io', status: 'Active', phone: '+1 555-0110', skills: ['Drop Cabling', 'ONT Mounting'] },
-  { id: 'stf-011', name: 'Hannah Abbott', role: 'Technician', email: 'hannah.a@fieldops.io', status: 'Active', phone: '+1 555-0111', skills: ['Fiber Testing', 'Power Meter'] },
-  { id: 'stf-012', name: 'Noah Miller', role: 'Technician', email: 'noah.m@fieldops.io', status: 'Inactive', phone: '+1 555-0112', skills: ['Residential Cabling'] }
-];
 
 class FieldOpsDB {
   constructor() {
@@ -40,118 +24,11 @@ class FieldOpsDB {
   }
 
   populateSeedDatabase() {
-    const today = new Date();
-    const staff = [...INITIAL_STAFF];
-    const teams = [];
-    const attendance = [];
-    const installs = [];
-    const troubleshoots = [];
-
-    // Generate past 7 days of realistic logs
-    for (let i = 6; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const dateStr = d.toISOString().split('T')[0];
-
-      // Mark Attendance
-      staff.forEach((stf) => {
-        if (stf.status === 'Inactive') return;
-        const rand = Math.random();
-        let status = 'Present';
-        if (rand < 0.08) status = 'Absent';
-        else if (rand < 0.15) status = 'On Leave';
-        else if (rand < 0.22) status = 'Late';
-
-        attendance.push({
-          id: `att-${dateStr}-${stf.id}`,
-          staffId: stf.id,
-          date: dateStr,
-          status: status,
-          checkInTime: status === 'Present' ? '07:45' : (status === 'Late' ? '08:35' : null),
-          notes: status === 'On Leave' ? 'Scheduled PTO' : (status === 'Late' ? 'Traffic delay' : '')
-        });
-      });
-
-      // Teams for the day
-      const teamAlphaId = `team-${dateStr}-alpha`;
-      const teamBetaId = `team-${dateStr}-beta`;
-
-      // Alpha Crew (4 members)
-      teams.push({
-        id: teamAlphaId,
-        teamName: 'Team Alpha (Zone North)',
-        date: dateStr,
-        leadId: 'stf-001',
-        members: ['stf-001', 'stf-004', 'stf-005', 'stf-006'],
-        vehicleZone: 'North Sector / Van #104',
-        notes: 'High density neighborhood deployment'
-      });
-
-      // Beta Crew (4 members)
-      teams.push({
-        id: teamBetaId,
-        teamName: 'Team Beta (Zone South)',
-        date: dateStr,
-        leadId: 'stf-002',
-        members: ['stf-002', 'stf-007', 'stf-008', 'stf-009'],
-        vehicleZone: 'South Commercial / Truck #202',
-        notes: 'Commercial drops & priority troubleshoots'
-      });
-
-      // Installation logs
-      const alphaInstalls = Math.floor(Math.random() * 6) + 8; // 8-13
-      const betaInstalls = Math.floor(Math.random() * 5) + 6;  // 6-10
-
-      installs.push({
-        id: `inst-${teamAlphaId}`,
-        teamId: teamAlphaId,
-        date: dateStr,
-        quantityCompleted: alphaInstalls,
-        installType: 'Residential Fiber Drop',
-        locationZone: 'Zone North',
-        hoursSpent: 8.0,
-        notes: 'Completed all scheduled residential drops.'
-      });
-
-      installs.push({
-        id: `inst-${teamBetaId}`,
-        teamId: teamBetaId,
-        date: dateStr,
-        quantityCompleted: betaInstalls,
-        installType: 'Commercial Gigabit Fiber',
-        locationZone: 'Zone South',
-        hoursSpent: 8.5,
-        notes: 'Multi-tenant commercial building installation.'
-      });
-
-      // Troubleshoot logs
-      const alphaTroubles = Math.floor(Math.random() * 4) + 2;
-      const betaTroubles = Math.floor(Math.random() * 5) + 3;
-
-      troubleshoots.push({
-        id: `trb-${teamAlphaId}`,
-        teamId: teamAlphaId,
-        date: dateStr,
-        casesResolved: alphaTroubles,
-        category: 'Optical Signal Degradation',
-        resolutionNotes: 'Cleaned bulkheads, re-spliced bent drop cable at demarc.'
-      });
-
-      troubleshoots.push({
-        id: `trb-${teamBetaId}`,
-        teamId: teamBetaId,
-        date: dateStr,
-        casesResolved: betaTroubles,
-        category: 'Modem / ONT Configuration',
-        resolutionNotes: 'Updated ONT firmware and reprovisioned VLAN tagging.'
-      });
-    }
-
-    localStorage.setItem(STORAGE_KEYS.STAFF, JSON.stringify(staff));
-    localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(attendance));
-    localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify(teams));
-    localStorage.setItem(STORAGE_KEYS.INSTALLS, JSON.stringify(installs));
-    localStorage.setItem(STORAGE_KEYS.TROUBLESHOOTS, JSON.stringify(troubleshoots));
+    localStorage.setItem(STORAGE_KEYS.STAFF, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.TEAMS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.INSTALLS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.TROUBLESHOOTS, JSON.stringify([]));
   }
 
   // Subscribe to changes
@@ -395,7 +272,7 @@ class FieldOpsDB {
   }
 
   resetToDefault() {
-    localStorage.clear();
+    Object.values(STORAGE_KEYS).forEach(key => localStorage.removeItem(key));
     this.populateSeedDatabase();
     this.notify('data_reloaded');
   }

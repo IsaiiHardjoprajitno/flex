@@ -286,7 +286,7 @@ class TeamLoggerModule {
           </thead>
           <tbody>
             ${teams.map(t => {
-              const lead = allStaff.find(s => s.id === t.leadId)?.name || 'Unknown';
+              const lead = allStaff.find(s => s.id === t.leadId)?.name || 'Unassigned';
               const memberNames = (t.members || [])
                 .map(mId => allStaff.find(s => s.id === mId)?.name)
                 .filter(Boolean);

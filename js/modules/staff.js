@@ -85,8 +85,8 @@ class StaffModule {
       id: this.editingStaffId || `stf-${Date.now()}`,
       name,
       role,
-      email: email || `${name.toLowerCase().replace(/\s+/g, '.')}@fieldops.io`,
-      phone: phone || '+1 555-0199',
+      email,
+      phone,
       skills,
       status
     };

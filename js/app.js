@@ -168,7 +168,7 @@ class App {
         crewsContainer.innerHTML = `
           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem;">
             ${teams.map(t => {
-              const lead = staff.find(s => s.id === t.leadId)?.name || 'Unknown';
+              const lead = staff.find(s => s.id === t.leadId)?.name || 'Unassigned';
               const inst = installs.find(i => i.teamId === t.id)?.quantityCompleted || 0;
               const trb = troubles.find(tr => tr.teamId === t.id)?.casesResolved || 0;
               const memberNames = (t.members || []).map(mId => staff.find(s => s.id === mId)?.name).filter(Boolean);
@@ -180,7 +180,7 @@ class App {
                     <span class="badge badge-primary">Lead: ${lead}</span>
                   </div>
                   <div style="font-size:0.75rem; color:var(--text-dim); margin-bottom:0.75rem;">
-                    Zone: ${t.vehicleZone || 'N/A'} • ${t.members.length} Technicians
+                    Zone: ${t.vehicleZone || 'No zone assigned'} • ${t.members.length} Technicians
                   </div>
                   <div style="display:flex; flex-wrap:wrap; gap:0.25rem; margin-bottom:0.75rem;">
                     ${memberNames.map(m => `<span style="font-size:0.7rem; background:var(--bg-surface); padding:0.1rem 0.4rem; border-radius:4px; border:1px solid var(--border-subtle);">${m}</span>`).join('')}

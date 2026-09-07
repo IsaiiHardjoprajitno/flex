@@ -29,12 +29,12 @@ class ExportModule {
       btnExportBackup.addEventListener('click', () => this.exportJSONBackup());
     }
 
-    const btnResetData = document.getElementById('btnResetDemoData');
+    const btnResetData = document.getElementById('btnClearLocalData');
     if (btnResetData) {
       btnResetData.addEventListener('click', () => {
-        if (confirm('Reset all tracking data to default realistic demo records?')) {
+        if (confirm('Clear all locally stored staff, attendance, team, and performance records?')) {
           window.db.resetToDefault();
-          window.app.showToast('Database reset to demo seed data!', 'success');
+          window.app.showToast('Local records cleared.', 'success');
         }
       });
     }
@@ -65,7 +65,7 @@ class ExportModule {
 
     const headers = ['Date', 'Team Name', 'Team Lead', 'Crew Members', 'Zone / Vehicle', 'Installs Completed', 'Install Type', 'Troubleshoots Resolved', 'Troubleshoot Category', 'Team Notes'];
     const rows = teams.map(t => {
-      const lead = staff.find(s => s.id === t.leadId)?.name || 'Unknown';
+      const lead = staff.find(s => s.id === t.leadId)?.name || 'Unassigned';
       const members = (t.members || []).map(mId => staff.find(s => s.id === mId)?.name || mId).join('; ');
       const inst = installs.find(i => i.teamId === t.id);
       const trb = troubles.find(tr => tr.teamId === t.id);
