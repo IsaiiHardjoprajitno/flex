@@ -146,6 +146,11 @@ DROP POLICY IF EXISTS "Authenticated users can manage teams" ON daily_teams;
 DROP POLICY IF EXISTS "Authenticated users can manage team members" ON team_members;
 DROP POLICY IF EXISTS "Authenticated users can manage installations" ON installation_logs;
 DROP POLICY IF EXISTS "Authenticated users can manage troubleshoots" ON troubleshoot_logs;
+DROP POLICY IF EXISTS "Authenticated users can read staff" ON staff;
+DROP POLICY IF EXISTS "Authenticated users can read attendance" ON daily_attendance;
+DROP POLICY IF EXISTS "Authenticated users can read teams" ON daily_teams;
+DROP POLICY IF EXISTS "Authenticated users can insert logs" ON installation_logs;
+DROP POLICY IF EXISTS "Authenticated users can insert troubleshoots" ON troubleshoot_logs;
 
 CREATE POLICY "Authenticated users can manage staff" ON staff FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "Authenticated users can manage attendance" ON daily_attendance FOR ALL TO authenticated USING (true) WITH CHECK (true);
@@ -153,15 +158,3 @@ CREATE POLICY "Authenticated users can manage teams" ON daily_teams FOR ALL TO a
 CREATE POLICY "Authenticated users can manage team members" ON team_members FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "Authenticated users can manage installations" ON installation_logs FOR ALL TO authenticated USING (true) WITH CHECK (true);
 CREATE POLICY "Authenticated users can manage troubleshoots" ON troubleshoot_logs FOR ALL TO authenticated USING (true) WITH CHECK (true);
-ALTER TABLE daily_attendance ENABLE ROW LEVEL SECURITY;
-ALTER TABLE daily_teams ENABLE ROW LEVEL SECURITY;
-ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
-ALTER TABLE installation_logs ENABLE ROW LEVEL SECURITY;
-ALTER TABLE troubleshoot_logs ENABLE ROW LEVEL SECURITY;
-
--- Allow authenticated users to view data
-CREATE POLICY "Authenticated users can read staff" ON staff FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can read attendance" ON daily_attendance FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can read teams" ON daily_teams FOR SELECT USING (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can insert logs" ON installation_logs FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-CREATE POLICY "Authenticated users can insert troubleshoots" ON troubleshoot_logs FOR INSERT WITH CHECK (auth.role() = 'authenticated');
