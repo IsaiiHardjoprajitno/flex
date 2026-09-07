@@ -82,7 +82,7 @@ class StaffModule {
     const skills = skillsRaw ? skillsRaw.split(',').map(s => s.trim()).filter(Boolean) : [];
 
     const staffData = {
-      id: this.editingStaffId || `stf-${Date.now()}`,
+      id: this.editingStaffId || crypto.randomUUID(),
       name,
       role,
       email,

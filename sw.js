@@ -3,13 +3,21 @@
  * Provides offline caching for static assets and app shell
  */
 
-const CACHE_NAME = 'fieldops-v1';
+const CACHE_NAME = 'fieldops-v2';
 const PRECACHE_ASSETS = [
   '/',
   '/index.html',
   '/client/',
   '/client/index.html',
   '/css/styles.css',
+  '/js/auth.js',
+  '/js/db.js',
+  '/js/app.js',
+  '/js/modules/staff.js',
+  '/js/modules/teamLogger.js',
+  '/js/modules/attendance.js',
+  '/js/modules/analytics.js',
+  '/js/modules/export.js',
   '/manifest.json',
   '/icon.svg',
   '/privacy.html',
